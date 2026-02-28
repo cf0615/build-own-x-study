@@ -1,10 +1,27 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <stdlib.h>
+
+#define DEBUG
+
+#ifndef DEBUG
+#define ASSERT(n)
+#else
+#define ASSERT(N) if (!(N)) { \
+    printf("%s - Failed", #N); \
+    printf("On %s ", __DATE__); \
+    printf("At %s ", __TIME__); \
+    printf("In %s ", __FILE__); \
+    printf("At Line %d\n", __LINE__); \
+    exit(1);}
+#endif
+
 typedef unsigned long long U64;
 
 #define NAME "VICE 1.0"
 #define BRD_SQ_NUM 120
+#define MAXGAMEMOVES 2048
 
 //piece
 enum {EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK};
@@ -31,6 +48,18 @@ enum {A1=21, B1, C1, D1, E1, F1, G1, H1,
 //bool
 enum {FALSE, TRUE};
 
+//castling permissions bitwise
+enum {WKCA = 1, WQCA = 2, BKCA = 4, BQCA = 8};
+
+//undo structure
+typedef struct{
+    int move; //move made
+    int castlePerm; //castling permissions before the move
+    int enPas; //en passant square before the move
+    int fiftyMove; //fifty move counter before the move
+    U64 posKey; //position key before the move
+} S_UNDO;
+
 //board structure
 typedef struct{
 
@@ -43,6 +72,8 @@ typedef struct{
     int enPas; //en passant flag
     int fiftyMove; //fifty move rule counter
 
+    int castlePerm; //castling permissions
+
     int ply;
     int hisPly;
 
@@ -53,6 +84,21 @@ typedef struct{
     int majPce[3]; //number of major pieces (rooks and queens) for white, black and both
     int minPce[3]; //number of minor pieces (bishops and knights) for white, black and both
 
+    S_UNDO history[MAXGAMEMOVES]; //history of moves for undo functionality
+
+    //piece list for each piece type
+    int pList[13][10]; //maximum 10 pieces of each type on the board
+
 } S_BOARD;
+
+//macros
+#define FR2SQ(f , r) ((21 + (f)) + ((r) * 10))
+
+//global variables
+extern int Sq120ToSq64[BRD_SQ_NUM];
+extern int Sq64ToSq120[64];
+
+//function
+extern void AllInit();
 
 #endif /* DEFS_H */
